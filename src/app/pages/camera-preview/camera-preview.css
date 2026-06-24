@@ -11,16 +11,29 @@
 .camera-video {
   width: 100%;
   height: 100%;
-  object-fit: cover; 
+  object-fit: cover;
 }
 
-.start-btn {
-  width: 100%;
-  padding: 14px;
+.overlay-controls {
+  position: absolute;
+  bottom: 40px;
+  left: 0;
+  right: 0;
+  display: flex;
+  justify-content: center;
+}
+
+.inspection-btn {
+  padding: 16px 48px;
   background: #1a3a6b;
   color: white;
   border: none;
-  border-radius: 12px;
-  font-size: 16px;
+  border-radius: 50px;
+  font-size: 18px;
   cursor: pointer;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.4);
+}
+
+.inspection-btn.stop {
+  background: #c0392b;
 }

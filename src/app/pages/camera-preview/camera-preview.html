@@ -6,4 +6,17 @@
     muted
     class="camera-video">
   </video>
+
+  <!-- زرار فوق الكاميرا -->
+  <div class="overlay-controls">
+    @if (!isSending) {
+      <button class="inspection-btn" (click)="startInspection()">
+        ابدأ المعاينة
+      </button>
+    } @else {
+      <button class="inspection-btn stop" (click)="stopInspection()">
+        إيقاف المعاينة
+      </button>
+    }
+  </div>
 </div>
