@@ -44,8 +44,9 @@ export class CameraPreview implements AfterViewInit, OnDestroy {
   };
 
   // ── WebSocket ─────────────────────────────────────────────────────────────
-  private readonly SERVER_URL = 'ws://196.219.114.138:8080/ws/validate';
-  private readonly userCarId  = 1;
+private readonly SERVER_URL =
+  'wss://196.219.114.138:8080/ws/validate';
+    private readonly userCarId  = 1;
   private socket: WebSocket | null = null;
   private frameInterval: any = null;
   private frameCount = 0;
