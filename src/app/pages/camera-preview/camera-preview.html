@@ -1,22 +1,162 @@
-<div class="camera-wrapper">
-  <video 
-    #videoElement
-    autoplay 
-    playsinline 
-    muted
-    class="camera-video">
-  </video>
+<!-- inspection-screen.component.html -->
+<div class="inspection-page">
 
-  <!-- زرار فوق الكاميرا -->
-  <div class="overlay-controls">
-    @if (!isSending) {
-      <button class="inspection-btn" (click)="startInspection()">
-        ابدأ المعاينة
-      </button>
-    } @else {
-      <button class="inspection-btn stop" (click)="stopInspection()">
-        إيقاف المعاينة
-      </button>
-    }
+  <!-- ── App Bar ── -->
+  <header class="app-bar">
+    <button class="back-btn" aria-label="رجوع">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M15 18l-6-6 6-6"/>
+      </svg>
+    </button>
+    <span class="app-bar__title">معاينة السيارة</span>
+    <div style="width:36px"></div>
+  </header>
+
+  <!-- ── Camera Area ── -->
+  <div class="camera-section">
+
+    <!-- Video feed -->
+    <div class="camera-wrapper">
+      <video
+        #videoElement
+        autoplay
+        playsinline
+        muted
+        class="camera-video"
+      ></video>
+
+      <!-- AR message overlay -->
+      <div class="overlay-message" [class.overlay-message--visible]="arMessage">
+        <p class="overlay-message__text">{{ arMessage || 'جاري التحليل…' }}</p>
+      </div>
+
+      <!-- Portrait hint (show only when not connected & portrait) -->
+      <div class="portrait-hint" *ngIf="!isConnected && isPortrait">
+        <div class="portrait-hint__icon">
+          <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="1.5">
+            <rect x="5" y="2" width="14" height="20" rx="2"/>
+            <path d="M12 17h.01"/>
+            <!-- rotation arrows -->
+            <path d="M3 12c0-3.3 2.7-6 6-6" stroke-dasharray="2 2"/>
+            <path d="M21 12c0 3.3-2.7 6-6 6" stroke-dasharray="2 2"/>
+            <polyline points="3 9 3 12 6 12"/>
+            <polyline points="21 15 21 12 18 12"/>
+          </svg>
+        </div>
+        <p class="portrait-hint__text">
+          للحصول على أفضل دقة في المعاينة، يُرجى تدوير الهاتف إلى الوضع الأفقي
+        </p>
+      </div>
+
+      <!-- Progress bar -->
+      <div class="progress-overlay" *ngIf="progress > 0">
+        <div class="progress-bar">
+          <div
+            class="progress-bar__fill"
+            [style.width.%]="progress"
+          ></div>
+        </div>
+        <span class="progress-bar__label">{{ progress }}%</span>
+      </div>
+    </div>
   </div>
+
+  <!-- ── Bottom Panel ── -->
+  <div class="bottom-panel">
+
+    <!-- Connected: checklist summary -->
+    <ng-container *ngIf="isConnected; else startBtn">
+      <div class="checklist-card">
+
+        <!-- All sides -->
+        <div class="check-row">
+          <span class="check-icon" [class.check-icon--done]="allSidesCaptured">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+              <polyline points="20 6 9 17 4 12"/>
+            </svg>
+          </span>
+          <span class="check-label">التقاط جميع جوانب السيارة</span>
+        </div>
+
+        <!-- Side badges -->
+        <div class="sides-row" *ngIf="capturedSides.length > 0">
+          <span
+            *ngFor="let side of sides"
+            class="side-badge"
+            [class.side-badge--done]="isSideCaptured(side.key)"
+          >
+            <svg *ngIf="isSideCaptured(side.key)" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+              <polyline points="20 6 9 17 4 12"/>
+            </svg>
+            {{ side.label }}
+          </span>
+        </div>
+
+        <!-- Roof -->
+        <div class="check-row">
+          <span class="check-icon" [class.check-icon--done]="roofCaptured">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+              <polyline points="20 6 9 17 4 12"/>
+            </svg>
+          </span>
+          <span class="check-label">
+            سقف السيارة
+          </span>
+        </div>
+
+        <!-- VIN -->
+        <div class="check-row">
+          <span class="check-icon" [class.check-icon--done]="!!vinNumber">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+              <polyline points="20 6 9 17 4 12"/>
+            </svg>
+          </span>
+          <span class="check-label">
+            رقم الشاسيه
+            <span class="check-value" *ngIf="vinNumber">: {{ vinNumber }}</span>
+          </span>
+        </div>
+
+        <!-- Odometer -->
+        <div class="check-row">
+          <span class="check-icon" [class.check-icon--done]="!!odometerReading">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+              <polyline points="20 6 9 17 4 12"/>
+            </svg>
+          </span>
+          <span class="check-label">
+            قراءة العداد
+            <span class="check-value" *ngIf="odometerReading">: {{ odometerReading }}</span>
+          </span>
+        </div>
+
+      </div>
+    </ng-container>
+
+    <!-- Not connected: start button -->
+    <ng-template #startBtn>
+      <button class="start-btn" (click)="startInspection()">
+        ابدأ الفحص
+      </button>
+    </ng-template>
+
+  </div>
+
+  <!-- ── Completion Modal ── -->
+  <div class="modal-backdrop" *ngIf="showCompletionModal">
+    <div class="modal-card">
+      <div class="modal-icon">
+        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#22c55e" stroke-width="2">
+          <circle cx="12" cy="12" r="10"/>
+          <polyline points="20 6 9 17 4 12"/>
+        </svg>
+      </div>
+      <h2 class="modal-title">تم إكمال المعاينة بنجاح</h2>
+      <p class="modal-body">سيتم الانتقال إلى الخطوة التالية</p>
+      <button class="modal-btn" (click)="closeModalAndContinue()">
+        متابعة
+      </button>
+    </div>
+  </div>
+
 </div>
