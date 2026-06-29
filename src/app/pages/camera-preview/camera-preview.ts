@@ -41,7 +41,10 @@ export class CameraPreview implements AfterViewInit, OnDestroy {
     this.isPortrait = window.innerHeight > window.innerWidth;
   };
 
- private readonly SERVER_URL = 'wss://brave-cleaning-likelihood-along.trycloudflare.com/ws/validate';
+private readonly SERVER_URL = (() => {
+  const protocol = window.location.protocol === 'https:' ? 'wss' : 'ws';
+  return `${protocol}://196.219.114.138:8080/ws/validate`;
+})();
     private readonly userCarId  = 1;
   private socket: WebSocket | null = null;
   private frameInterval: any = null;
@@ -133,9 +136,11 @@ export class CameraPreview implements AfterViewInit, OnDestroy {
       this.isConnected = true;
       this.isSending   = true;
       this.arMessage   = 'جارٍ الاتصال…';
-      this.frameInterval = setInterval(() => this.captureAndSendFrame(), 1200);
-    };
+        setTimeout(() => {
+    this.frameInterval = setInterval(() => this.captureAndSendFrame(), 1200);
+  }, 500);
 
+    };
     this.socket.onmessage = (event) => this.handleServerMessage(event.data);
 
     this.socket.onerror = (err) => {
@@ -169,35 +174,43 @@ export class CameraPreview implements AfterViewInit, OnDestroy {
     this.frameCount         = 0;
   }
 
-   private captureAndSendFrame(): void {
-    const video = this.videoElement?.nativeElement;
-    if (!video || this.isCapturing || video.readyState < 2) return;
+  private captureAndSendFrame(): void {
+  const video = this.videoElement?.nativeElement;
+  if (!video || this.isCapturing || video.readyState < 2) return;
 
-    this.isCapturing = true;
+  this.isCapturing = true;
 
-    this.canvas.width  = video.videoWidth;
-    this.canvas.height = video.videoHeight;
-    this.canvas.getContext('2d')?.drawImage(video, 0, 0);
-
-    this.canvas.toBlob((blob) => {
-      if (!blob) { this.isCapturing = false; return; }
-
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        const base64 = (reader.result as string).split(',')[1];
-        const msg = JSON.stringify({
-          type: 'frame',
-          data: base64,
-          frame_number: this.frameCount,
-        });
-        try { this.socket?.send(msg); } catch {}
-        this.frameCount++;
-        this.isCapturing = false;
-      };
-      reader.readAsDataURL(blob);
-
-    }, 'image/jpeg', 0.8);
+  try {
+    this.canvas.width  = video.videoWidth  || 640;
+    this.canvas.height = video.videoHeight || 480;
+    
+    const ctx = this.canvas.getContext('2d');
+    if (!ctx) { this.isCapturing = false; return; }
+    
+    ctx.drawImage(video, 0, 0);
+    
+    // استخدم toDataURL بدل toBlob - أسرع وأستقر على Mobile
+    const dataUrl = this.canvas.toDataURL('image/jpeg', 0.7);
+    const base64  = dataUrl.split(',')[1];
+    
+    if (!base64) { this.isCapturing = false; return; }
+    
+    const msg = JSON.stringify({
+      type: 'frame',
+      data: base64,
+      frame_number: this.frameCount,
+    });
+    
+    if (this.socket?.readyState === WebSocket.OPEN) {
+      this.socket.send(msg);
+      this.frameCount++;
+    }
+  } catch (err) {
+    console.error('Frame capture error:', err);
+  } finally {
+    this.isCapturing = false;
   }
+}
 
    private handleServerMessage(raw: string): void {
     try {
