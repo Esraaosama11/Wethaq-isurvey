@@ -30,34 +30,28 @@ export class CameraPreview implements AfterViewInit, OnDestroy {
 
   @ViewChild('videoElement') videoElement!: ElementRef<HTMLVideoElement>;
 
-  // ── Camera state ──────────────────────────────────────────────────────────
-  isActive    = false;
+   isActive    = false;
   isSending   = false;
   private stream: MediaStream | null = null;
   private canvas = document.createElement('canvas');
   private isCapturing = false;
 
-  // ── Orientation ───────────────────────────────────────────────────────────
-  isPortrait = window.innerHeight > window.innerWidth;
+   isPortrait = window.innerHeight > window.innerWidth;
   private onResize = () => {
     this.isPortrait = window.innerHeight > window.innerWidth;
   };
 
-  // ── WebSocket ─────────────────────────────────────────────────────────────
-private readonly SERVER_URL =
-  'wss://196.219.114.138:8080/ws/validate';
+ private readonly SERVER_URL = 'wss://brave-cleaning-likelihood-along.trycloudflare.com/ws/validate';
     private readonly userCarId  = 1;
   private socket: WebSocket | null = null;
   private frameInterval: any = null;
   private frameCount = 0;
 
-  // ── Progress ──────────────────────────────────────────────────────────────
-  progress       = 0;
+   progress       = 0;
   targetProgress = 0;
   private progressTimer: any = null;
 
-  // ── Inspection state ──────────────────────────────────────────────────────
-  isConnected         = false;
+   isConnected         = false;
   arMessage           = 'اضغط لبدأ المعاينه';
   status              = 'INITIAL';
   currentPhase        = '';
@@ -67,8 +61,7 @@ private readonly SERVER_URL =
   odometerReading     = '';
   showCompletionModal = false;
 
-  // ── TTS ───────────────────────────────────────────────────────────────────
-  private synth = window.speechSynthesis;
+   private synth = window.speechSynthesis;
   private lastSpokenMessage = '';
 
   readonly sides = [
@@ -88,8 +81,7 @@ private readonly SERVER_URL =
 
   constructor(private http: HttpClient) {}
 
-  // ── Lifecycle ─────────────────────────────────────────────────────────────
-  async ngAfterViewInit(): Promise<void> {
+   async ngAfterViewInit(): Promise<void> {
     window.addEventListener('resize', this.onResize);
     await this.startCamera();
   }
@@ -100,8 +92,7 @@ private readonly SERVER_URL =
     this.synth.cancel();
   }
 
-  // ── Camera ────────────────────────────────────────────────────────────────
-  private async startCamera(): Promise<void> {
+   private async startCamera(): Promise<void> {
     try {
       this.stream = await navigator.mediaDevices.getUserMedia({
         video: { facingMode: 'environment' },
@@ -129,8 +120,7 @@ private readonly SERVER_URL =
     this.isActive = false;
   }
 
-  // ── Inspection start / stop ───────────────────────────────────────────────
-  startInspection(): void {
+   startInspection(): void {
     if (this.isSending || !this.stream) return;
 
     this.progress       = 0;
@@ -179,8 +169,7 @@ private readonly SERVER_URL =
     this.frameCount         = 0;
   }
 
-  // ── Frame capture ─────────────────────────────────────────────────────────
-  private captureAndSendFrame(): void {
+   private captureAndSendFrame(): void {
     const video = this.videoElement?.nativeElement;
     if (!video || this.isCapturing || video.readyState < 2) return;
 
@@ -210,8 +199,7 @@ private readonly SERVER_URL =
     }, 'image/jpeg', 0.8);
   }
 
-  // ── Message handler ───────────────────────────────────────────────────────
-  private handleServerMessage(raw: string): void {
+   private handleServerMessage(raw: string): void {
     try {
       const msg: ServerMessage = JSON.parse(raw);
       console.log('📥 Server:', msg);
@@ -247,8 +235,7 @@ private readonly SERVER_URL =
     }
   }
 
-  // ── TTS ───────────────────────────────────────────────────────────────────
-  private speak(text: string): void {
+   private speak(text: string): void {
     if (!text || text === this.lastSpokenMessage) return;
     this.lastSpokenMessage = text;
     this.synth.cancel();
@@ -258,8 +245,7 @@ private readonly SERVER_URL =
     this.synth.speak(utt);
   }
 
-  // ── Progress ──────────────────────────────────────────────────────────────
-  private calculateProgress(): number {
+   private calculateProgress(): number {
     let p = 0;
     if (this.capturedSides.includes('front')) p += 15;
     if (this.capturedSides.includes('left'))  p += 15;
@@ -283,8 +269,7 @@ private readonly SERVER_URL =
     }, 30);
   }
 
-  // ── API ───────────────────────────────────────────────────────────────────
-  private processByFlag(): void {
+   private processByFlag(): void {
     const url = `/api/VideoDetection/ProcessByFlag?userCarId=${this.userCarId}&flag=1`;
     this.http.post(url, null, { headers: { Accept: 'application/json' } }).subscribe({
       next:  (res) => console.log('ProcessByFlag:', res),
@@ -292,8 +277,7 @@ private readonly SERVER_URL =
     });
   }
 
-  // ── Modal ─────────────────────────────────────────────────────────────────
-  closeModalAndContinue(): void {
+   closeModalAndContinue(): void {
     this.showCompletionModal = false;
     // this.router.navigate(['/payment-success']);
   }
